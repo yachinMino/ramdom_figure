@@ -63,7 +63,8 @@ function createShape() {
         hueSpeed: (Math.random() - 0.5) * 0.5, // 個別の色相変化速度
         opacity: 0, // 透明度（フェードインのために0から開始）
         fadingOut: false, // フェードアウト中かどうかのフラグ
-        fadingIn: true // フェードイン中かどうかのフラグ
+        fadingIn: true, // フェードイン中かどうかのフラグ
+        innerRadiusRatio: type === 'star' ? 0.5 : 0 // 星形の内側半径の比率（星形の場合のみ設定、固定値0.5）
     };
     shapes.push(shape); // 作成した図形をリストに追加します
 }
@@ -98,7 +99,7 @@ function drawShape(shape) {
     } else if (shape.type === 'star') {
         // 星形を描画します
         const outerRadius = shape.size / 2; // 外側の点の半径
-        const innerRadius = outerRadius * (Math.random() * 0.3 + 0.4); // 内側の点の半径（外側の40-70%）
+        const innerRadius = outerRadius * shape.innerRadiusRatio; // 内側の点の半径（createShapeで設定された比率を使用）
         const angleIncrement = Math.PI / shape.sides; // 点ごとの角度
         for (let i = 0; i < shape.sides * 2; i++) {
             const radius = i % 2 === 0 ? outerRadius : innerRadius; // 外側と内側の半径を交互に使用
