@@ -20,18 +20,19 @@ function getRandomShapeColor(shapeHue) {
     return `hsla(${shapeHue}, 70%, 60%, ${shape.opacity})`;
 }
 
-// Function to generate a random shape (circle or polygon)
+// Function to generate a random shape (circle, polygon, or star)
 function createShape() {
-    const type = Math.random() > 0.5 ? 'circle' : 'polygon';
+    const shapeTypes = ['circle', 'polygon', 'star'];
+    const type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
-    const initialSize = Math.random() * 120 + 60; // Min 60, Max 180 (even larger max size)
-    const speedMultiplier = Math.random() * 1 + 0.5; // Random speed multiplier (0.5 to 1.5, overall slower)
-    const speedX = (Math.random() - 0.5) * 1 * speedMultiplier; // Base speed reduced to 1
-    const speedY = (Math.random() - 0.5) * 1 * speedMultiplier; // Base speed reduced to 1
+    const initialSize = Math.random() * 240 + 120; // Min 120, Max 360 (double the previous max size)
+    const speedMultiplier = Math.random() * 0.7 + 0.3; // Random speed multiplier (0.3 to 1.0, overall slower)
+    const speedX = (Math.random() - 0.5) * 0.7 * speedMultiplier; // Base speed reduced to 0.7
+    const speedY = (Math.random() - 0.5) * 0.7 * speedMultiplier; // Base speed reduced to 0.7
     const creationTime = Date.now();
     const minDisplayTime = 30000; // Minimum 30 seconds
-    const disappearChance = 0.001; // Chance to disappear per frame
+    const disappearChance = 0.0005; // Reduced chance to disappear per frame (more increasing shapes)
 
     let shape = {
         type,
@@ -44,14 +45,14 @@ function createShape() {
         creationTime,
         minDisplayTime,
         disappearChance,
-        sides: type === 'polygon' ? Math.floor(Math.random() * 3) + 3 : 0, // 3 to 5 sides for polygons
+        sides: type === 'polygon' ? Math.floor(Math.random() * 3) + 3 : (type === 'star' ? Math.floor(Math.random() * 3) + 5 : 0), // 3 to 5 sides for polygons, 5 to 7 points for stars
         rotation: Math.random() * Math.PI * 2,
         rotationSpeed: (Math.random() - 0.5) * 0.02,
-        scaleX: 1, // Aspect ratio fixed at 1
-        scaleY: 1, // Aspect ratio fixed at 1
-        hue: (globalHue + Math.random() * 180) % 360, // Individual hue, offset from global
-        hueSpeed: (Math.random() - 0.5) * 0.5, // Individual hue change speed
-        opacity: 0, // Start with 0 for fade-in
+        scaleX: 1,
+        scaleY: 1,
+        hue: (globalHue + Math.random() * 180) % 360,
+        hueSpeed: (Math.random() - 0.5) * 0.5,
+        opacity: 0,
         fadingOut: false,
         fadingIn: true
     };
@@ -60,10 +61,9 @@ function createShape() {
 
 // Function to draw a shape
 function drawShape(shape) {
-    ctx.save(); // Save the current canvas state
-    ctx.translate(shape.x, shape.y); // Move origin to shape center
-    ctx.rotate(shape.rotation); // Apply rotation
-    // ctx.scale(shape.scaleX, shape.scaleY); // Aspect ratio is now fixed, no need to scale here
+    ctx.save();
+    ctx.translate(shape.x, shape.y);
+    ctx.rotate(shape.rotation);
 
     ctx.fillStyle = `hsla(${shape.hue}, 70%, 60%, ${shape.opacity})`;
     ctx.beginPath();
@@ -83,9 +83,25 @@ function drawShape(shape) {
             }
         }
         ctx.closePath();
+    } else if (shape.type === 'star') {
+        const outerRadius = shape.size / 2;
+        const innerRadius = outerRadius * (Math.random() * 0.3 + 0.4); // Inner radius 40-70% of outer
+        const angleIncrement = Math.PI / shape.sides;
+        for (let i = 0; i < shape.sides * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = i * angleIncrement;
+            const px = Math.cos(angle) * radius;
+            const py = Math.sin(angle) * radius;
+            if (i === 0) {
+                ctx.moveTo(px, py);
+            } else {
+                ctx.lineTo(px, py);
+            }
+        }
+        ctx.closePath();
     }
     ctx.fill();
-    ctx.restore(); // Restore the canvas state
+    ctx.restore();
 }
 
 // Animation loop
@@ -157,13 +173,13 @@ function animate() {
 
         // Update size
         if (Date.now() % 5000 < 16) { // Change target size every ~5 seconds (less frequent)
-            shape.targetSize = Math.random() * 120 + 60; // Min 60, Max 180
+            shape.targetSize = Math.random() * 240 + 120; // Min 120, Max 360
         }
         shape.size += (shape.targetSize - shape.size) * 0.02; // Slower smooth size transition
         // Aspect ratio is fixed, so no scaleX/Y updates
 
-        // Update rotation for polygons
-        if (shape.type === 'polygon') {
+        // Update rotation for polygons and stars
+        if (shape.type === 'polygon' || shape.type === 'star') {
             shape.rotation += shape.rotationSpeed;
         }
 
@@ -182,7 +198,7 @@ function animate() {
     }
 
     // Add new shapes if there are less than a certain number (increased quantity)
-    if (shapes.length < 20) { // Increased from 10 to 20
+    if (shapes.length < 50) { // Increased from 20 to 50 to fill the screen
         createShape();
     }
 
@@ -190,7 +206,7 @@ function animate() {
 }
 
 // Initial shape creation (increased quantity)
-for (let i = 0; i < 10; i++) { // Increased from 5 to 10
+for (let i = 0; i < 20; i++) { // Increased from 10 to 20
     createShape();
 }
 
